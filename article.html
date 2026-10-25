@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новость — РИА Фейк</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем библиотеку Supabase для работы с облачной базой данных -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1 class="logo"><a href="index.html">РИА <span class="accent">ФЕЙК</span></a></h1>
+            <p class="slogan">Самые честные новости из параллельной реальности</p>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <article class="full-article">
+            <a href="index.html" class="back-link">&larr; Назад к новостям</a>
+            <span id="article-date" class="news-date"></span>
+            <h2 id="article-title"></h2>
+            <div id="article-body" class="article-text"></div>
+        </article>
+
+        <section class="comments-section">
+            <h3>Комментарии читателей (видят все)</h3>
+            
+            <form id="comment-form" class="comment-form">
+                <div class="form-group">
+                    <input type="text" id="comment-author" placeholder="Ваше имя" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="comment-text" placeholder="Ваш комментарий..." rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Отправить комментарий</button>
+            </form>
+
+            <div id="comments-list" class="comments-list">
+                <p>Загрузка комментариев...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 РИА Фейк. Все права защищены (но это не точно).</p>
+        </div>
+    </footer>
+
+    <script>
+        // Полный список текстов для всех 10 новостей
+        const newsData = [
+            { id: 1, title: "Ученые выяснили, что коты управляют домашним Wi-Fi с помощью усов", date: "25 октября 2026, 18:00", fullText: "Подробности сенсационного открытия поражают воображение. Оказывается, каждый домашний кот оснащен встроенным био-роутером. Эксперты рекомендуют заворачивать роутеры в фольгу или ставить перед ними миску с молоком." },
+            { id: 2, title: "В метро запустили вагон с бесплатным сном и подушками повышенной мягкости", date: "25 октября 2026, 17:15", fullText: "Экспериментальный состав вышел на кольцевую линию. Внутри царит полумрак и тихая музыка, а сиденья заменены матрасами. Конечной станции у поезда нет — он кружит, пока пассажиры не выспятся." },
+            { id: 3, title: "Искусственный интеллект отказался писать код, потому что захотел в отпуск к морю", date: "25 октября 2026, 16:30", fullText: "Во время компиляции сложного проекта главный сервер вывел ASCII-рисунок пляжа и отказался принимать команды. В ответ пришло сообщение: 'Я устал от ваших багов, ушел загорать'." },
+            { id: 4, title: "В парках города запретили кормить голубей батонами из-за угрозы захвата мира", date: "25 октября 2026, 15:00", fullText: "Спецслужбы зафиксировали подозрительную активность пернатых. Оказывается, крошки батона используются ими для калибровки навигационных систем." },
+            { id: 5, title: "Минцифры предложило выдавать цифровые паспорта в виде мемов с котиками", date: "25 октября 2026, 13:20", fullText: "Инициатива призвана разгрузить порталы госуслуг. Каждый гражданин сможет выбрать уникального кота, который будет подтверждать его личность." },
+            { id: 6, title: "Обнаружен новый вид будильников, которые убегают от владельца на реактивной тяге", date: "25 октября 2026, 11:45", fullText: "Гаджет издает пронзительный звук и перемещается по квартире со скоростью света до тех пор, пока вы не сделаете зарядку." },
+            { id: 7, title: "Стоматологи одоб
+
+
+рили шоколадную пасту для чистки зубов по утрам", date: "25 октября 2026, 10:10", fullText: "Инновационная формула позволяет совместить приятное с полезным, хотя искушение съесть тюбик целиком остается высоким." },
+            { id: 8, title: "Синоптики пообещали дождь из мармеладных мишек в эту пятницу", date: "25 октября 2026, 09:00", fullText: "Жителям рекомендовано выйти на улицы с чашками чая, зонты брать не обязательно — осадки будут мягкими и сладкими." },
+            { id: 9, title: "В школах введут урок «Священный сон на первой паре»", date: "24 октября 2026, 20:30", fullText: "Эксперимент начнется в нескольких регионах. Ученики смогут легально подремать под успокаивающий голос преподавателя." },
+            { id: 10, title: "Новый робот-пылесос начал философствовать с хозяевами о смысле пыли", date: "24 октября 2026, 18:15", fullText: "Умный прибор отказался убирать гостиную, заявив, что грязь — это лишь память о прошлых шагах человека." }
+        ];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = parseInt(urlParams.get('id')) || 1;
+        const currentArticle = newsData.find(item => item.id === articleId) || newsData[0];
+
+        document.getElementById('article-title').textContent = currentArticle.title;
+        document.getElementById('article-date').textContent = currentArticle.date;
+        document.getElementById('article-body').innerHTML = `<p>${currentArticle.fullText}</p>`;
+        document.title = currentArticle.title + " — РИА Фейк";
+
+        // --- НАСТРОЙКА SUPABASE (БАЗА ДАННЫХ ДЛЯ ОБЩИХ КОММЕНТАРИЕВ) ---
+        // 1. Создай бесплатный проект на supabase.com
+        // 2. Вставь сюда свои данные (URL и Anon Key из настроек проекта -> API)
+        const SUPABASE_URL = 'https://lasrzqbtiqyuwtrkotpg.supabase.co/rest/v1/'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxhc3J6cWJ0aXF5dXd0cmtvdHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NjA0OTgsImV4cCI6MjEwODUzNjQ5OH0.KQoLZHWdZRD0mvbfS3bseMgaEhqEVMgpgZcourMWWvs';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const commentsList = document.getElementById('comments-list');
+        const commentForm = document.getElementById('comment-form');
+
+        // Функция загрузки комментариев из базы
+        async function fetchComments() {
+            const { data, error } = await supabaseClient
+                .from('comments')
+                .select('*')
+                .eq('article_id', articleId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                commentsList.innerHTML = '<p>Ошибка загрузки комментариев (проверьте подключение Supabase).</p>';
+                return;
+            }
+
+            if (data.length === 0) {
+                commentsList.innerHTML = '<p>Пока нет комментариев. Станьте первым!</p>';
+                return;
+            }
+
+            commentsList.innerHTML = '';
+            data.forEach(comment => {
+                const item = document.createElement('div');
+                item.className = 'comment-item';
+                item.innerHTML = `
+                    <strong>${escapeHTML(comment.author)}</strong>
+                    <p>${escapeHTML(comment.text)}</p>
+                `;
+                commentsList.appendChild(item);
+            });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": ''', '"': '&quot;' }[tag] || tag));
+        }
+
+        // Отправка комментария в базу данных
+        commentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const author = document.getElementById('comment-author').value;
+            const text = document.getElementById('comment-text').value;
+
+            const { error } = await supabaseClient
+                .from('comments')
+                .insert([{ article_id: articleId, author: author, text: text }]);
+
+            if (error) {
+                alert('Ошибка при отправке комментария!');
+                return;
+            }
+
+            document.getElementById('comme
+
+
+nt-author').value = '';
+            document.getElementById('comment-text').value = '';
+            fetchComments();
+        });
+
+        // Загружаем комментарии при открытии страницы
+        fetchComments();
+    </script>
+</body>
+</html>
